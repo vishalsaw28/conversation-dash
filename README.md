@@ -1,75 +1,547 @@
-# React + TypeScript + Vite
+# 📬 Conversation Inbox
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-quality **customer support inbox UI** built with React 19, TypeScript 6, Vite 8, Tailwind CSS v4, and MSW (Mock Service Worker). No backend required — all API calls are intercepted by a Service Worker and served from in-memory mock data.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+- **Three-column layout** — filter panel · conversation list · conversation detail
+- **8 realistic mock conversations** — payment failures, locked accounts, billing disputes, and more
+- **Priority & urgency scoring** — conversations ranked 0–100 by sentiment, wait time, and CSAT risk
+- **Live filtering** — by status, priority, channel, CSAT risk, "assigned to me", and full-text search
+- **Multiple sort modes** — priority, urgency score, wait time, last updated
+- **Full message thread** — customer / agent / AI-bot bubbles, auto-scrolls to latest message
+- **Actions** — Reply, Resolve, Assign to agent, Snooze
+- **Optimistic UI** — "saving…" indicator and disabled buttons while a request is in-flight
+- **Toast notifications** — success (3.5 s) and error (6 s) toasts with slide-in animation
+- **Error-handling demo** — one conversation always returns HTTP 503 to demonstrate failure states
+- **Keyboard shortcuts** — `/` focuses search · `Cmd/Ctrl + Enter` sends a reply
+- **Fully accessible** — ARIA roles, `aria-label`, `aria-pressed`, `role="progressbar"`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠 Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Tool                                                             | Version | Purpose                                     |
+| ---------------------------------------------------------------- | ------- | ------------------------------------------- |
+| [React](https://react.dev)                                       | 19      | UI framework                                |
+| [TypeScript](https://www.typescriptlang.org)                     | 6       | Static typing                               |
+| [Vite](https://vite.dev)                                         | 8       | Build tool & dev server                     |
+| [Tailwind CSS](https://tailwindcss.com)                          | 4       | Utility-first styling                       |
+| [@tailwindcss/vite](https://github.com/tailwindlabs/tailwindcss) | 4       | Tailwind v4 Vite plugin (no PostCSS needed) |
+| [MSW](https://mswjs.io)                                          | 2       | API mocking via Service Worker              |
+| [Lucide React](https://lucide.dev)                               | latest  | SVG icon library                            |
+| [oxlint](https://oxc.rs/docs/guide/usage/linter)                 | latest  | Fast Rust-based linter                      |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 Quick Start
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
 
+- **Node.js 18+** — verify with `node -v`
+- **npm** — verify with `npm -v`
+
+### 1 — Scaffold with Vite
+
+```bash
+npm create vite@latest conversation-inbox -- --template react-ts
+cd conversation-inbox
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2 — Install dependencies
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npm install tailwindcss @tailwindcss/vite lucide-react msw
+npm install -D oxlint @types/node
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 3 — Initialise MSW
+
+```bash
+npx msw init public/ --save
+```
+
+This generates `public/mockServiceWorker.js` — the browser Service Worker that intercepts all `fetch()` calls.
+
+### 4 — Start the dev server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173). The MSW worker registers automatically and all API calls are served from mock data.
+
+---
+
+## 📁 Project Structure
 
 ```
+conversation-inbox/
+├── index.html                        # HTML shell — single <div id="root">
+├── package.json                      # Dependencies & scripts
+├── vite.config.ts                    # Vite: React plugin + Tailwind Vite plugin
+├── tsconfig.json                     # Root TS config (references app + node)
+├── tsconfig.app.json                 # App TS config (ES2023, JSX, strict, bundler)
+├── tsconfig.node.json                # Node TS config (for vite.config.ts)
+├── public/
+│   ├── favicon.svg
+│   ├── icons.svg
+│   └── mockServiceWorker.js          # ← generated by: npx msw init public/
+└── src/
+    ├── vite-env.d.ts                 # Vite type shims (import.meta.env etc.)
+    ├── index.css                     # @import "tailwindcss" + global resets + scrollbar
+    ├── App.css                       # Legacy Vite scaffold styles (mostly unused)
+    ├── main.tsx                      # Entry: starts MSW, then mounts React
+    ├── App.tsx                       # Root: 3-column layout + state orchestration
+    ├── types/
+    │   └── index.ts                  # ALL TypeScript types & interfaces
+    ├── mocks/
+    │   ├── data.ts                   # 8 mock conversations + MOCK_AGENTS array
+    │   ├── handlers.ts               # MSW request handlers (7 REST endpoints)
+    │   └── browser.ts                # Creates the MSW Service Worker instance
+    ├── utils/
+    │   └── conversation.ts           # Pure helpers: format, filter, sort, UI classes
+    ├── hooks/
+    │   └── useConversations.ts       # Custom hook: all state + all API calls
+    └── components/
+        ├── FilterPanel.tsx           # Left sidebar: sort dropdown + filter chips
+        ├── ConversationList.tsx      # Middle column: search bar + scrollable rows
+        ├── ConversationRow.tsx       # One row: avatar, meta, urgency bar, pending state
+        ├── ConversationDetail.tsx    # Right pane: thread + reply box + action buttons
+        ├── EmptyState.tsx            # Placeholder when no conversation is selected
+        └── Toast.tsx                 # Toast system: useToast hook + ToastContainer
+```
+
+---
+
+## 🗂 File Creation Order
+
+Create files in this order — every file imports only from files that already exist:
+
+| Step | File                                                         | Why first                                                      |
+| ---- | ------------------------------------------------------------ | -------------------------------------------------------------- |
+| 1    | `package.json`                                               | Define deps before any code                                    |
+| 2    | `vite.config.ts`                                             | Build tool config                                              |
+| 3    | `tsconfig.json` + `tsconfig.app.json` + `tsconfig.node.json` | TypeScript before any `.ts` files                              |
+| 4    | `index.html`                                                 | HTML shell                                                     |
+| 5    | `public/mockServiceWorker.js`                                | Run `npx msw init public/`                                     |
+| 6    | `src/vite-env.d.ts`                                          | Vite type shims                                                |
+| 7    | `src/index.css`                                              | Global styles                                                  |
+| 8    | **`src/types/index.ts`**                                     | ⚠️ ALL other source files import from here — create this first |
+| 9    | `src/mocks/data.ts`                                          | Mock data (uses types)                                         |
+| 10   | `src/mocks/handlers.ts`                                      | MSW handlers (imports data + types)                            |
+| 11   | `src/mocks/browser.ts`                                       | MSW worker (imports handlers)                                  |
+| 12   | `src/utils/conversation.ts`                                  | Pure utils (imports types only)                                |
+| 13   | `src/hooks/useConversations.ts`                              | Hook (imports types + utils)                                   |
+| 14   | `src/components/Toast.tsx`                                   | Standalone, no component deps                                  |
+| 15   | `src/components/EmptyState.tsx`                              | Simplest component                                             |
+| 16   | `src/components/FilterPanel.tsx`                             | Imports types only                                             |
+| 17   | `src/components/ConversationRow.tsx`                         | Imports types + utils                                          |
+| 18   | `src/components/ConversationList.tsx`                        | Imports types + ConversationRow                                |
+| 19   | `src/components/ConversationDetail.tsx`                      | Imports types + utils + mocks/data                             |
+| 20   | `src/App.tsx`                                                | Root: imports hook + all components                            |
+| 21   | `src/main.tsx`                                               | Entry: imports App + MSW browser                               |
+
+---
+
+## 🔬 Architecture Deep Dive
+
+### Data Flow
+
+```
+Browser boots
+  → main.tsx starts MSW Service Worker
+  → React mounts, App.tsx calls useConversations()
+  → useEffect fires fetchConversations()
+  → fetch('/api/conversations')  ← intercepted by MSW
+  → MSW handler returns MOCK_CONVERSATIONS JSON
+  → setAllConversations(data)
+  → visibleConversations = sort(filter(all, filters), sort)
+  → FilterPanel | ConversationList | EmptyState render
+
+User clicks a conversation row
+  → setSelectedId(id)
+  → ConversationDetail replaces EmptyState
+
+User clicks "Resolve"
+  → ConversationDetail calls onResolve(id)
+  → useConversations.resolve(id)
+  → withPending(id, fn):
+      pendingActions.add(id)         → row shows "saving…"
+      fetch PATCH /api/.../resolve   → MSW mutates in-memory data
+      updateConversation(updated)    → allConversations updated
+      pendingActions.delete(id)
+  → ActionResult { ok: true }
+  → success toast appears for 3.5 s
+```
+
+### State Architecture
+
+All state lives in one custom hook (`useConversations`). Components are stateless — they receive props and call callbacks.
+
+```
+useConversations()
+ ├── allConversations: Conversation[]      ← source of truth (from API)
+ ├── loading: boolean                      ← initial fetch in-flight
+ ├── error: string | null                  ← fetch failure message
+ ├── filters: FilterState                  ← user's active filters
+ ├── sort: SortState                       ← active sort field + direction
+ ├── selectedId: string | null             ← open conversation
+ ├── pendingActions: Set<string>           ← IDs with in-flight mutations
+ │
+ ├── [derived] visibleConversations        ← sort(filter(all, filters), sort)
+ ├── [derived] selectedConversation        ← allConversations.find(id)
+ │
+ └── actions: { resolve, assign, snooze, reply }
+```
+
+### The `withPending` Pattern
+
+Every mutation goes through this wrapper — it provides optimistic UI and loading state for free:
+
+```ts
+const withPending = async (id: string, action: () => Promise<ActionResult>) => {
+  setPendingActions((s) => new Set(s).add(id)); // show "saving…"
+  const result = await action(); // run the API call
+  setPendingActions((s) => {
+    const n = new Set(s);
+    n.delete(id);
+    return n;
+  });
+  if (result.ok) updateConversation(result.conversation);
+  return result;
+};
+```
+
+### ActionResult — Forced Error Handling
+
+Every action returns a discriminated union that forces callers to handle both outcomes:
+
+```ts
+type ActionResult =
+  | { ok: true; conversation: Conversation }
+  | { ok: false; error: string };
+```
+
+---
+
+## 🌐 API Reference (MSW Endpoints)
+
+All endpoints are intercepted by MSW — no real server exists.
+
+| Method  | Endpoint                             | Description                                                         |
+| ------- | ------------------------------------ | ------------------------------------------------------------------- |
+| `GET`   | `/api/conversations`                 | Returns all conversations                                           |
+| `GET`   | `/api/conversations/:id`             | Returns one conversation (404 if missing)                           |
+| `PATCH` | `/api/conversations/:id/resolve`     | Sets `status = "resolved"`                                          |
+| `PATCH` | `/api/conversations/:id/assign`      | Sets `assignedTo` from body `{ agentId }`, `status = "in_progress"` |
+| `PATCH` | `/api/conversations/:id/snooze`      | Sets `status = "snoozed"` from body `{ until }`                     |
+| `POST`  | `/api/conversations/:id/reply`       | Appends agent message from body `{ message }`                       |
+| `PATCH` | `/api/conversations/:id/toggle-fail` | Toggles `_failWrites` flag (demo helper)                            |
+
+Every handler adds a **200–500 ms random delay** to simulate real network latency. If `conversation._failWrites === true`, all write endpoints return **HTTP 503**.
+
+---
+
+## 📐 TypeScript Type System
+
+All types are defined in `src/types/index.ts` and imported everywhere else.
+
+```ts
+// Primitive union types
+type Priority = "critical" | "high" | "medium" | "low";
+type Status = "waiting" | "in_progress" | "resolved" | "snoozed";
+type Channel = "chat" | "email" | "whatsapp" | "voice";
+type SortField =
+  | "priority"
+  | "waitTime"
+  | "sentiment"
+  | "updatedAt"
+  | "urgencyScore";
+
+// Core data model
+interface Conversation {
+  id: string;
+  customer: { name: string; email: string; avatarInitials: string };
+  channel: Channel;
+  status: Status;
+  priority: Priority;
+  urgencyScore: number; // 0–100: drives colour + sort
+  sentiment: "positive" | "neutral" | "negative" | "very_negative";
+  csatRisk: boolean;
+  subject: string;
+  lastMessage: string;
+  waitingSince: string; // ISO datetime
+  updatedAt: string; // ISO datetime
+  assignedTo: string | null;
+  tags: string[];
+  escalationReason: string;
+  messages: Message[];
+  _failWrites?: boolean; // demo flag — makes writes return 503
+}
+
+// State shapes
+interface FilterState {
+  status: Status[];
+  priority: Priority[];
+  channel: Channel[];
+  assignedToMe: boolean;
+  csatRisk: boolean;
+  search: string;
+}
+
+interface SortState {
+  field: SortField;
+  direction: "asc" | "desc";
+}
+```
+
+---
+
+## 🧩 Component Reference
+
+### `<FilterPanel />`
+
+Left sidebar. Stateless — receives all values as props, calls callbacks on change.
+
+| Prop             | Type                       | Description                            |
+| ---------------- | -------------------------- | -------------------------------------- |
+| `filters`        | `FilterState`              | Current active filters                 |
+| `sort`           | `SortState`                | Current sort field and direction       |
+| `onFilterChange` | `(f: FilterState) => void` | Called on every filter change          |
+| `onSortChange`   | `(s: SortState) => void`   | Called on sort change                  |
+| `totalCount`     | `number`                   | Total non-resolved conversations       |
+| `visibleCount`   | `number`                   | Conversations matching current filters |
+
+### `<ConversationList />`
+
+Middle column. Renders the search bar and a list of `<ConversationRow>` components.
+
+| Prop             | Type                       | Description                               |
+| ---------------- | -------------------------- | ----------------------------------------- |
+| `conversations`  | `Conversation[]`           | Already filtered and sorted               |
+| `selectedId`     | `string \| null`           | Currently selected conversation ID        |
+| `pendingActions` | `Set<string>`              | IDs with in-flight requests               |
+| `filters`        | `FilterState`              | Used to contextualise empty state message |
+| `onFilterChange` | `(f: FilterState) => void` | For search input binding                  |
+| `onSelect`       | `(id: string) => void`     | Called on row click                       |
+
+### `<ConversationRow />`
+
+Single row rendered as a `<button>`. Keyboard focusable, shows selected and pending states.
+
+| Prop           | Type           | Description                          |
+| -------------- | -------------- | ------------------------------------ |
+| `conversation` | `Conversation` | The conversation to display          |
+| `isSelected`   | `boolean`      | Applies indigo highlight styles      |
+| `isPending`    | `boolean`      | Shows "saving…" with `animate-pulse` |
+| `onClick`      | `() => void`   | Row click handler                    |
+
+### `<ConversationDetail />`
+
+Right pane. Manages local state for: reply text, snooze dropdown, assign dropdown.
+
+| Prop           | Type                                                     | Description                              |
+| -------------- | -------------------------------------------------------- | ---------------------------------------- |
+| `conversation` | `Conversation`                                           | Full conversation with messages          |
+| `isPending`    | `boolean`                                                | Disables action buttons during mutations |
+| `onResolve`    | `(id: string) => Promise<ActionResult>`                  | Resolve action                           |
+| `onAssign`     | `(id: string, agentId: string) => Promise<ActionResult>` | Assign action                            |
+| `onSnooze`     | `(id: string, until: string) => Promise<ActionResult>`   | Snooze action                            |
+| `onReply`      | `(id: string, message: string) => Promise<ActionResult>` | Reply action                             |
+| `onToast`      | `(type, message) => void`                                | Triggers a toast notification            |
+
+### `<EmptyState />`
+
+No props. Displays when no conversation is selected.
+
+### `<ToastContainer />`
+
+| Prop       | Type                   | Description                              |
+| ---------- | ---------------------- | ---------------------------------------- |
+| `toasts`   | `Toast[]`              | Array of active toasts                   |
+| `onRemove` | `(id: string) => void` | Called on manual dismiss or auto-dismiss |
+
+### `useToast()` hook
+
+```ts
+const { toasts, addToast, removeToast } = useToast();
+addToast("success", "Conversation resolved.");
+addToast("error", "Action failed — connection lost.");
+addToast("info", "Conversation snoozed until tomorrow.");
+```
+
+---
+
+## 🎨 Styling
+
+Tailwind CSS v4 is imported in a single line in `src/index.css`:
+
+```css
+@import "tailwindcss";
+```
+
+No `tailwind.config.js` or `postcss.config.js` required — the `@tailwindcss/vite` plugin handles everything.
+
+Global custom styles added in `@layer base`:
+
+- Universal `box-sizing: border-box`
+- `font-family: system-ui` body font
+- `focus-visible` ring for accessibility
+- Custom `6px` webkit scrollbar (slate-700 thumb)
+- `slide-in-from-right` keyframe for toast animation
+
+---
+
+## 🔑 Keyboard Shortcuts
+
+| Key                              | Action                 | Where                                   |
+| -------------------------------- | ---------------------- | --------------------------------------- |
+| `/`                              | Focus the search input | Anywhere (not when already in an input) |
+| `Cmd ⌘ + Enter` / `Ctrl + Enter` | Send reply             | When textarea is focused and non-empty  |
+
+---
+
+## 🧪 Mock Data
+
+Eight conversations cover a realistic range of scenarios:
+
+| ID       | Customer         | Priority     | Channel  | Status      | Urgency |
+| -------- | ---------------- | ------------ | -------- | ----------- | ------- |
+| conv_001 | Rahul Mehta      | **critical** | chat     | waiting     | 97      |
+| conv_002 | Sarah Chen       | high         | email    | waiting     | 81      |
+| conv_003 | James Okoye      | high         | whatsapp | in_progress | 74      |
+| conv_004 | Priya Nair       | medium       | chat     | waiting     | 52      |
+| conv_005 | Tomas Herrera    | medium       | chat     | waiting     | 45      |
+| conv_006 | Fatima Al-Rashid | low          | voice    | waiting     | 22      |
+| conv_007 | Derek Walsh      | medium       | email    | **snoozed** | 38      |
+| conv_008 | Yuki Tanaka      | **critical** | chat     | waiting     | 89 ⚡   |
+
+> **⚡ conv_008** has `_failWrites: true` — every write action returns HTTP 503 to demonstrate error handling.
+
+Three mock agents:
+
+| ID        | Name            | Title                     |
+| --------- | --------------- | ------------------------- |
+| `agent_1` | Priya Sharma    | Senior Support Specialist |
+| `agent_2` | Marcus Thompson | Support Engineer          |
+| `agent_3` | Aiko Rodriguez  | Customer Success Manager  |
+
+---
+
+## 🛠 Available Scripts
+
+```bash
+npm run dev      # Start Vite dev server on localhost:5173
+npm run build    # Type-check (tsc -b) then build to dist/
+npm run preview  # Preview the production build locally
+npm run lint     # Run oxlint
+```
+
+---
+
+## 🏗 Production Deployment
+
+Before building for production, guard the MSW setup so the Service Worker is not included in production bundles:
+
+```ts
+// src/main.tsx
+async function enableMocking() {
+  if (!import.meta.env.DEV) return; // ← add this guard
+  const { worker } = await import("./mocks/browser");
+  return worker.start({ onUnhandledRequest: "bypass" });
+}
+```
+
+Then build normally:
+
+```bash
+npm run build
+```
+
+Output goes to `dist/`. Deploy to any static hosting — Vercel, Netlify, Cloudflare Pages, or a plain Nginx server.
+
+---
+
+## 🔌 Replacing Mocks with a Real API
+
+The app code never knows it's talking to a mock. To connect a real backend:
+
+1. Remove `enableMocking()` from `src/main.tsx` (or keep the `DEV` guard above)
+2. Delete or ignore the `src/mocks/` folder
+3. Update the fetch URLs in `src/hooks/useConversations.ts` to point at your real server
+4. Add auth headers, CSRF tokens, etc. to the fetch calls as needed
+
+No component changes required.
+
+---
+
+## 📂 Key Utility Functions (`src/utils/conversation.ts`)
+
+| Function              | Signature                           | Description                               |
+| --------------------- | ----------------------------------- | ----------------------------------------- |
+| `formatWaitTime`      | `(iso: string) → string`            | `"47m"` or `"2h 5m"` from an ISO datetime |
+| `formatTimestamp`     | `(iso: string) → string`            | `"14:32"` for message timestamps          |
+| `filterConversations` | `(convs, filters) → Conversation[]` | Applies all FilterState predicates        |
+| `sortConversations`   | `(convs, sort) → Conversation[]`    | Returns a sorted copy (never mutates)     |
+| `getUrgencyColor`     | `(score: number) → string`          | Tailwind `text-*` class by score band     |
+| `getPriorityClasses`  | `(p: Priority) → {badge, dot}`      | Tailwind classes for priority badges      |
+| `getChannelIcon`      | `(channel: string) → string`        | `💬 📧 📱 📞`                             |
+| `getSentimentIcon`    | `(sentiment: string) → string`      | `😡 😕 😐 🙂`                             |
+
+---
+
+## ⚙️ Vite Configuration
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+});
+```
+
+Two plugins only — React (JSX transform + Fast Refresh) and Tailwind v4 (zero-config CSS processing).
+
+---
+
+## 🧠 Design Decisions & Patterns
+
+### Single custom hook as state hub
+
+`useConversations` owns all remote state and mutations. No Redux, no Zustand, no React Context. Components receive props and call callbacks — they never directly touch state.
+
+### Derived values, not extra state
+
+`visibleConversations` and `selectedConversation` are computed inline on every render. Storing a filtered list in separate state creates sync bugs — derived values are always correct by definition.
+
+### `withPending` wrapper
+
+One higher-order function gives every mutation optimistic UI and loading state without repeating the logic in each action function.
+
+### MSW at the Service Worker level
+
+MSW intercepts `fetch()` inside a real browser Service Worker — not axios mocks, not module mocks. The application code is identical whether talking to MSW or a real server.
+
+### Draft preservation on failed reply
+
+The reply textarea is cleared optimistically before the request fires. If the request fails, the text is restored — users never lose a partially written message.
+
+### `_failWrites` demo flag
+
+`conv_008` (Yuki Tanaka) has this flag set to `true`. All write MSW handlers check it and return HTTP 503. No special tooling, network throttling, or browser DevTools required to demo error states.
+
+---
+
+## 📄 License
+
+MIT — free to use, modify, and distribute.
+
+---
+
+_Built with React 19 · TypeScript 6 · Vite 8 · Tailwind CSS v4 · MSW v2_
